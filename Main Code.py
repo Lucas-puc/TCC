@@ -7,8 +7,14 @@ import serial
 
 
 
+#Inicializa Camera. Define qual câmera usar: 0 = câmera integrada // 1 = câmera USB
+camera = cv.VideoCapture(0) 
 
+#Inicializa comunicação com o arduino
+arduino = serial.Serial('COM6', 9600, timeout = 1)
 
+#FPS desejado
+set_fps = 30
 
 
 
@@ -42,6 +48,12 @@ def Controle(posX, posY, tamX, tamY):
 ###################################Fim da função de controle##########################################################################################################
 
 
+
+
+
+
+
+
 ####### Função para mover motores
 def MoverMotores():
     global angulo_X
@@ -55,12 +67,24 @@ def MoverMotores():
 
     #Envia comando para o arduino
     mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
-    print(mensagem)
+    #print(mensagem)
     mensagem = str.encode(mensagem)
-    #arduino.write(mensagem)
+    arduino.write(mensagem)
     return;
 
 #####################################################
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -131,14 +155,42 @@ def ControleAplicado():
 	    tecla = cv.waitKey(1)
 	    #Tecla "ESC" sai do loop
 	    if tecla == 27:
+		    cv.namedWindow("Ajuste de Mascara")
+		    cv.createTrackbar("Min-H", "Ajuste de Mascara", 0, 179, nada)
+		    cv.createTrackbar("Min-S", "Ajuste de Mascara", 0, 255, nada)
+		    cv.createTrackbar("Min-V", "Ajuste de Mascara", 0, 255, nada)
+		    cv.createTrackbar("Max-H", "Ajuste de Mascara", 0, 179, nada)
+		    cv.createTrackbar("Max-S", "Ajuste de Mascara", 0, 255, nada)
+		    cv.createTrackbar("Max-V", "Ajuste de Mascara", 0, 255, nada)
+		    #Valores Iniciais (pre-config 1):
+		    cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 29)
+		    cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 86)
+		    cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 6)
+		    cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 64)
+		    cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
+		    cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		    break
-	    while (time.time() - init) < 1/30:
+	    while (time.time() - init) <= (1/set_fps):
 		    pass
 	    #Cálculo de FPS
 	    fps = str(round((1/(time.time() - init)), 1))
 
 
 ###############################################################    Fim do Controle Aplicado
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -219,30 +271,44 @@ def ColetaDados():
 	    tecla = cv.waitKey(1)
 	    #Tecla "ESC" sai do loop
 	    if tecla == 27:
+		    cv.namedWindow("Ajuste de Mascara")
+		    cv.createTrackbar("Min-H", "Ajuste de Mascara", 0, 179, nada)
+		    cv.createTrackbar("Min-S", "Ajuste de Mascara", 0, 255, nada)
+		    cv.createTrackbar("Min-V", "Ajuste de Mascara", 0, 255, nada)
+		    cv.createTrackbar("Max-H", "Ajuste de Mascara", 0, 179, nada)
+		    cv.createTrackbar("Max-S", "Ajuste de Mascara", 0, 255, nada)
+		    cv.createTrackbar("Max-V", "Ajuste de Mascara", 0, 255, nada)
+		    #Valores Iniciais (pre-config 1):
+		    cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 29)
+		    cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 86)
+		    cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 6)
+		    cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 64)
+		    cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
+		    cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		    break
 	    if teste_on == 0:
 		    #Mover para cima (w)
-		    if tecla == 119:
+		    if tecla == 119 and teste_on == 0:
 			    angulo_X = angulo_X + 1
 			    MoverMotores()
 		    #Mover para baixo(s)
-		    if tecla == 115:
+		    if tecla == 115 and teste_on == 0:
 			    angulo_X = angulo_X - 1
 			    MoverMotores()
 		    #Mover para esquerda (a)
-		    if tecla == 97:
+		    if tecla == 97 and teste_on == 0:
 			    angulo_Y = angulo_Y - 1
 			    MoverMotores()
 		    #Mover para direita (d)
-		    if tecla == 100:
+		    if tecla == 100 and teste_on == 0:
 			    angulo_Y = angulo_Y + 1
 			    MoverMotores()
 		    #Apertas "g" para começar a coleta de dados (escolhe direção usando w,a,s,d)
 		    if tecla == 103:
 			    teste_on = 1
-			    tecla == cv.waitKey()
 			    inicio_captura = 0
 			    print("N:Tempo:Angulo X:Erro X:Angulo Y:Erro Y")
+			    tecla = cv.waitKey()
 			    #Mover para cima (w)
 			    if tecla == 119:
 				    novo_angulo_X = angulo_X + 10
@@ -258,7 +324,7 @@ def ColetaDados():
 			    
 			
 	    #Garante o intervalo de tempo constante
-	    while (time.time() - init) < 1/30:
+	    while (time.time() - init) <= (1/set_fps):
 		    pass
    
 	    #Cálculo de FPS
@@ -266,7 +332,6 @@ def ColetaDados():
 
 	    #Contagem de ciclos após iniciar a captura
 	    if teste_on == 1:
-		    print(str(time.time() - init) + ":" + str(angulo_X) + ":" + str(erro_X) + ":" + str(angulo_Y) + ":" + str(erro_Y))
 		    #aplicação do degrau
 		    if inicio_captura == 60:
 			    angulo_X = novo_angulo_X
@@ -274,6 +339,7 @@ def ColetaDados():
 			    MoverMotores()
 		    if inicio_captura == 210:
 			    teste_on = 0
+		    print(str(inicio_captura) + ":" + str(time.time() - init) + ":" + str(angulo_X) + ":" + str(erro_X) + ":" + str(angulo_Y) + ":" + str(erro_Y))
 		    inicio_captura = inicio_captura+1
 
 
@@ -291,16 +357,29 @@ def ColetaDados():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ############################################################################   Menu e configuração
 
 
-
-#Inicializa Camera. Define qual câmera usar: 0 = câmera integrada // 1 = câmera USB
-camera = cv.VideoCapture(0) 
-
-
-#Inicializa comunicação com o arduino
-#arduino = serial.Serial('COM7', 9600, timeout = 1)
 
 
 #Delay para aguardar a inicialização da câmera e do arduino
