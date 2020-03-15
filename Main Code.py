@@ -23,7 +23,8 @@ class Imagem:
 		self.camera = cv.VideoCapture(camera_num)
 		print("Inicializando Camera...")
 		time.sleep(2)
-
+		self.x = 100
+		self.y = 100
 
 	def __del__(self):
 		self.camera.release()
@@ -84,11 +85,11 @@ class Imagem:
 		if len(contornos) > 0:
 			#Usa o maior contorno encontrado para calcular o raio e o centro do circulo
 			c = max(contornos, key=cv.contourArea)
-			((x, y), raio) = cv.minEnclosingCircle(c)
+			((self.x, self.y), raio) = cv.minEnclosingCircle(c)
 			#Testa o raio do circulo para evitar ruídos
 			if raio > 10:
 			    #Desenha o circulo (cor em BGR)
-			    cv.circle(frame, (int(x), int(y)), int(raio), (0, 0, 255), 2)
+			    cv.circle(frame, (int(self.x), int(self.y)), int(raio), (0, 0, 255), 2)
 		
 		#Mostra a imagem capturada da câmera e da máscara de cor
 		cv.imshow("Camera", frame)
@@ -119,12 +120,12 @@ class Imagem:
 		if len(contornos) > 0:
 			#Usa o maior contorno encontrado para calcular o raio e o centro do circulo
 			c = max(contornos, key=cv.contourArea)
-			((x, y), raio) = cv.minEnclosingCircle(c)
+			((self.x, self.y), raio) = cv.minEnclosingCircle(c)
 			#Testa o raio do circulo para evitar ruídos
 			if raio > 10:
 				#Desenha cruz no centro do circulo
-				cv.line(frame, (int(x-raio/4), int(y)), (int(x+raio/4), int(y)), (0, 0, 255), 1)
-				cv.line(frame, (int(x), int(y-raio/4)), (int(x), int(y+raio/4)), (0, 0, 255), 1)
+				cv.line(frame, (int(self.x-raio/4), int(self.y)), (int(self.x+raio/4), int(self.y)), (0, 0, 255), 1)
+				cv.line(frame, (int(self.x), int(self.y-raio/4)), (int(self.x), int(self.y+raio/4)), (0, 0, 255), 1)
 
 		#Desenha uma cruz no centro do frame
 		cv.line(frame, (largura//2-10, altura//2), (largura//2+10, altura//2), (255, 0, 0), 1)
@@ -134,7 +135,7 @@ class Imagem:
 		cv.imshow("Camera", frame)
 
 		#Retorna os valores do ponto X, Y, altura e largura
-		return x, y, largura, altura
+		return self.x, self.y, largura, altura
 
 
 
@@ -152,7 +153,7 @@ def MoverMotores():
 
     #Envia comando para o arduino
     mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
-    #print(mensagem)
+    print(mensagem)
     mensagem = str.encode(mensagem)
     #arduino.write(mensagem)
 
@@ -163,6 +164,7 @@ def Controle():
 	global angulo_X
 	global angulo_Y
 	posX, posY, tamX, tamY = Cam.Rastreamento()
+	
 	#Calculo do erro
 	erro_X = posX - tamX/2
 	erro_Y = tamY/2 - posY
@@ -229,7 +231,7 @@ time.sleep(2)
 print("Inicializando comunicação...")
 
 while True:
-        #Modo de ajuste de máscara
+	#Modo de ajuste de máscara
 	while modo == 0:
 		Cam.AjusteMascara()
 		tecla = cv.waitKey(1)
@@ -249,7 +251,7 @@ while True:
 	if tecla == 27: #Tecla ESC
 		del Cam
 		break
-        #Seleção de Modos
+	#Seleção de Modos
 	if tecla == ord('q'):
 		cv.destroyAllWindows()
 		modo = 0
