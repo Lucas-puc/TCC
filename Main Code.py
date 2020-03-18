@@ -14,8 +14,8 @@ def_com = 6             #Define a porta serial utilizada pelo Arduino
 def_amostragem = 0.035   #Define a taxa de amostragem em segundos
 angulo_X = 90           #Posição inicial do motor responsável pelo eixo X
 angulo_Y = 90           #Posição inicial do motor responsável pelo eixo Y
-
-
+erroacX = 0
+erroacY = 0
 
 #Objeto para processamento de imagem
 class Imagem:
@@ -25,10 +25,48 @@ class Imagem:
 		time.sleep(2)
 		self.x = 100
 		self.y = 100
+		self.inicio_status = 1
 
 	def __del__(self):
 		self.camera.release()
 		cv.destroyAllWindows()
+
+	#Pré configurações
+	def PreConfig(self, numero):
+		if numero == 1:
+			#Valores Iniciais (pre-config 1):
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 0)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 148)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 6)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 10)
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
+		if numero == 2:
+			#Valores Iniciais (pre-config 2):
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 15)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 98)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 18)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 32)
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 91)
+		if numero == 3:
+			#Valores Iniciais (pre-config 3):
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 68)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 76)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 5)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 127)
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 150)
+		if numero == 0:
+			#Utilizar os valores atuais
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", self.cor_min[0])
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", self.cor_min[1])
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", self.cor_min[2])
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", self.cor_max[0])
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", self.cor_max[1])
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", self.cor_max[2])
+			
+
 
 	#Função para ajuste de máscara
 	def AjusteMascara(self):		
@@ -42,15 +80,15 @@ class Imagem:
 			cv.createTrackbar("Min-V", "Ajuste de Mascara", 0, 255, nada)
 			cv.createTrackbar("Max-H", "Ajuste de Mascara", 0, 179, nada)
 			cv.createTrackbar("Max-S", "Ajuste de Mascara", 0, 255, nada)
-			cv.createTrackbar("Max-V", "Ajuste de Mascara", 0, 255, nada)
-
-			#Valores Iniciais (pre-config 1):
-			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 29)
-			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 86)
-			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 6)
-			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 64)
-			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
-			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
+			cv.createTrackbar("Max-V", "Ajuste de Mascara", 0, 255, nada)	
+			
+			#Valores já existentes:
+			if self.inicio_status == 0:                        
+				self.PreConfig(0)
+			else:
+				#Primeiro loop do sistema
+				self.PreConfig(1)
+				self.inicio_status = 0			
 
 		#Captura o frame atual
 		_, frame = self.camera.read()
@@ -142,36 +180,57 @@ class Imagem:
 
 #Função que movimenta os motores de acordo com as variáveis globais
 def MoverMotores():
-    global angulo_X
-    global angulo_Y
+	global angulo_X
+	global angulo_Y
 
-    #Saturação
-    if angulo_X > 180 : angulo_X = 180 
-    if angulo_X < 0 : angulo_X = 0 
-    if angulo_Y > 180 : angulo_Y = 180 
-    if angulo_Y < 0 : angulo_Y = 0 
+	#Saturação
+	if angulo_X > 180 : angulo_X = 180 
+	if angulo_X < 0 : angulo_X = 0 
+	if angulo_Y > 180 : angulo_Y = 180 
+	if angulo_Y < 0 : angulo_Y = 0 
 
-    #Envia comando para o arduino
-    mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
-    print(mensagem)
-    mensagem = str.encode(mensagem)
-    #arduino.write(mensagem)
+	#Envia comando para o arduino
+	mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
+	print(mensagem)
+	mensagem = str.encode(mensagem)
+	arduino.write(mensagem)
 
 
+
+#Função de comandos para os motores
+def ComandarMotores(direcao):
+	global angulo_X
+	global angulo_Y
+
+	if direcao == "cima":
+		angulo_Y = angulo_Y-1
+	if direcao == "baixo":
+		angulo_Y = angulo_Y+1
+	if direcao == "esquerda":
+		angulo_X = angulo_X+1
+	if direcao == "direita":
+		angulo_X = angulo_X-1
+	MoverMotores()
+
+		
 
 #Função de aplicação do Controlador
 def Controle():
 	global angulo_X
 	global angulo_Y
+	global erroacX
+	global erroacY
 	posX, posY, tamX, tamY = Cam.Rastreamento()
-	
+
 	#Calculo do erro
 	erro_X = posX - tamX/2
 	erro_Y = tamY/2 - posY
+	erroacX = erro_X + erroacX
+	erroacY = erro_Y + erroacY
 
 	#Aplica o controle
-	controle_X = erro_X/100
-	controle_Y = erro_Y/100
+	controle_X = 0*erroacX + erro_X/100
+	controle_Y = 0*erroacY + erro_Y/100
 
 	#Ajusta a saída
 	angulo_X = angulo_X - controle_X
@@ -226,7 +285,7 @@ Cam = Imagem(def_camera) #inicializa camera
 modo = 0 #Inicializa com o modo de ajuste da máscara
 
 #Inicialização do Arduino
-#arduino = serial.Serial('COM'+str(def_com), 9600, timeout = 1)
+arduino = serial.Serial('COM'+str(def_com), 9600, timeout = 1)
 time.sleep(2)
 print("Inicializando comunicação...")
 
@@ -235,6 +294,20 @@ while True:
 	while modo == 0:
 		Cam.AjusteMascara()
 		tecla = cv.waitKey(1)
+		if tecla == ord('z'):
+			Cam.PreConfig(1)
+		if tecla == ord('x'):
+			Cam.PreConfig(2)
+		if tecla == ord('c'):
+			Cam.PreConfig(3)
+		if tecla == ord('w'):
+			ComandarMotores("cima")
+		if tecla == ord('s'):
+			ComandarMotores("baixo")
+		if tecla == ord('a'):
+			ComandarMotores("esquerda")
+		if tecla == ord('d'):
+			ComandarMotores("direita")
 		if tecla != -1:
 			break
 	#Modo com controle aplicado
@@ -255,17 +328,17 @@ while True:
 	if tecla == ord('q'):
 		cv.destroyAllWindows()
 		modo = 0
-	if tecla == ord('w'):
+	if tecla == ord('e'):
 		cv.destroyAllWindows()
 		modo = 1
 	#Modo captura (Degrau)
-	if tecla == ord('8'):
+	if tecla == ord('1'):
 		Degrau("cima")
 		cv.destroyAllWindows()
 	if tecla == ord('2'):
 		Degrau("baixo")
 		cv.destroyAllWindows()
-	if tecla == ord('6'):
+	if tecla == ord('3'):
 		Degrau("direita")
 		cv.destroyAllWindows()
 	if tecla == ord('4'):
