@@ -92,6 +92,7 @@ class Imagem:
 
 		#Captura o frame atual
 		_, frame = self.camera.read()
+		frame = cv.rotate(frame, cv.ROTATE_90_COUNTERCLOCKWISE)
 
 		#Suavização da imagem para filtrar ruidos
 		frame_suave = cv.GaussianBlur(frame, (11, 11), 0)
@@ -137,6 +138,7 @@ class Imagem:
 	def Rastreamento(self):
 		#Captura o frame atual
 		_, frame = self.camera.read()
+		frame = cv.rotate(frame, cv.ROTATE_90_COUNTERCLOCKWISE)
 		altura, largura,_ = frame.shape
 
 		#Suavização da imagem para filtrar ruidos
@@ -193,7 +195,7 @@ def MoverMotores():
 	mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
 	print(mensagem)
 	mensagem = str.encode(mensagem)
-	arduino.write(mensagem)
+	#arduino.write(mensagem)
 
 
 
@@ -285,7 +287,7 @@ Cam = Imagem(def_camera) #inicializa camera
 modo = 0 #Inicializa com o modo de ajuste da máscara
 
 #Inicialização do Arduino
-arduino = serial.Serial('COM'+str(def_com), 9600, timeout = 1)
+#arduino = serial.Serial('COM'+str(def_com), 9600, timeout = 1)
 time.sleep(2)
 print("Inicializando comunicação...")
 
