@@ -9,8 +9,8 @@ def nada(x):
 
 
 #Parâmetros
-def_camera = 1          #Define a câmera a ser utilizada (integrada = 0)
-def_com = 7            #Define a porta serial utilizada pelo Arduino
+def_camera = 0          #Define a câmera a ser utilizada (integrada = 0)
+def_com = 6            #Define a porta serial utilizada pelo Arduino
 def_amostragem = 0.035   #Define a taxa de amostragem em segundos
 angulo_X = 90           #Posição inicial do motor responsável pelo eixo X
 angulo_Y = 90           #Posição inicial do motor responsável pelo eixo Y
@@ -193,7 +193,7 @@ def MoverMotores():
 
 	#Envia comando para o arduino
 	mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
-	#print(mensagem)
+	print(mensagem)
 	mensagem = str.encode(mensagem)
 	arduino.write(mensagem)
 
