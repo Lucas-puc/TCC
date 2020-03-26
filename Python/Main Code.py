@@ -11,7 +11,7 @@ def nada(x):
 #Parâmetros
 def_camera = 0          #Define a câmera a ser utilizada (integrada = 0)
 def_com = 6            #Define a porta serial utilizada pelo Arduino
-def_amostragem = 0.035   #Define a taxa de amostragem em segundos
+def_amostragem = 0.04   #Define a taxa de amostragem em segundos
 angulo_X = 90           #Posição inicial do motor responsável pelo eixo X
 angulo_Y = 90           #Posição inicial do motor responsável pelo eixo Y
 erroacX = 0
@@ -51,12 +51,12 @@ class Imagem:
 			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 91)
 		if numero == 3:
 			#Valores Iniciais (pre-config 3):
-			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 68)
-			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 76)
-			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 5)
-			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 127)
-			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
-			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 150)
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 5)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 139)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 14)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 28)
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 248)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		if numero == 0:
 			#Utilizar os valores atuais
 			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", self.cor_min[0])
@@ -193,7 +193,7 @@ def MoverMotores():
 
 	#Envia comando para o arduino
 	mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
-	print(mensagem)
+	#print(mensagem)
 	mensagem = str.encode(mensagem)
 	arduino.write(mensagem)
 
@@ -263,7 +263,7 @@ def Degrau(sentido):
 	print("N:Angulo X:Posicao X:Angulo Y:Posicao Y")
 	N = 0
 	while True:
-		inicio = time.time()
+		inicio = time.perf_counter()
 		if N == 60:
 			angulo_X = novo_X
 			angulo_Y = novo_Y
@@ -274,12 +274,61 @@ def Degrau(sentido):
 		if N == 120:
 			break
 		N = N+1
-		while ((time.time() - inicio) < def_amostragem):
+		while ((time.perf_counter() - inicio) < def_amostragem):
 			pass
 
 
+def Ensaio_WhiteNoise(eixo):
+	cv.destroyAllWindows()
+	global angulo_X
+	global angulo_Y
+	angulo_X_inicial = angulo_X
+	angulo_Y_inicial = angulo_Y
+	posX_inicial, posY_inicial, _, _ = Cam.Rastreamento()
+	if eixo == "x": def_eixo = 0
+	if eixo == "y": def_eixo = 1
+	u = [None]*501
+	value = [None]*501
+	sinal = open("Degrau.txt", "r")
+	k = 0
+	for line in sinal:
+		u[k] = float(line.rstrip())
+		k = k+1
+	sinal.close()
+	tudo_certo = True
+	for n in range(501):
+		inicio = time.perf_counter()
+		tecla = cv.waitKey(1) #Utilizado por limitação do compilador
+		angulo_X = angulo_X_inicial + u[n] * (1-def_eixo)
+		angulo_Y = angulo_Y_inicial + u[n] * (def_eixo)
+		MoverMotores()
+		posX, posY, _, _ = Cam.Rastreamento()
+		value[n] = posX*(1-def_eixo) + posY*(def_eixo)
+		while time.perf_counter() - inicio < def_amostragem:
+			pass
+		if time.perf_counter() - inicio > 0.05 :
+			print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
+			tudo_certo = False
+			break
+	if tudo_certo:
+		resposta = open("Resposta Degrau " + eixo + ".txt","w")
+		for k in range(501):
+			resposta.write(str((value[k] - float(posX_inicial*(1-def_eixo) + posY_inicial*(def_eixo)))) + "\n")
+		resposta.close()
+		print("Coleta Finalizada")
 
-#                       MAIN CODE		
+
+
+
+
+
+
+
+
+
+
+
+		       #MAIN CODE		
 
 
 
@@ -314,12 +363,12 @@ while True:
 			break
 	#Modo com controle aplicado
 	while modo == 1:
-		inicio = time.time()
+		inicio = time.perf_counter()
 		Controle()
 		tecla = cv.waitKey(1)		
 		if tecla != -1:
 			break
-		while(time.time()-inicio < def_amostragem):
+		while(time.perf_counter()-inicio < def_amostragem):
 			pass
 
 	#Leitura de Teclas
@@ -335,10 +384,10 @@ while True:
 		modo = 1
 	#Modo captura (Degrau)
 	if tecla == ord('1'):
-		Degrau("cima")
+		Ensaio_WhiteNoise("x")
 		cv.destroyAllWindows()
 	if tecla == ord('2'):
-		Degrau("baixo")
+		Ensaio_WhiteNoise("y")
 		cv.destroyAllWindows()
 	if tecla == ord('3'):
 		Degrau("direita")
