@@ -4,6 +4,7 @@ import numpy as np
 import time
 import imutils
 import serial
+from datetime import datetime
 def nada(x):
 	pass
 
@@ -50,6 +51,14 @@ class Imagem:
 			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
 			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 91)
 		if numero == 3:
+			#Valores Iniciais (pre-config 3):
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 5)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 139)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 14)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 28)
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 248)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
+		if numero == 4:
 			#Valores Iniciais (pre-config 3):
 			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 5)
 			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 139)
@@ -129,10 +138,14 @@ class Imagem:
 			if raio > 10:
 			    #Desenha o circulo (cor em BGR)
 			    cv.circle(frame, (int(self.x), int(self.y)), int(raio), (0, 0, 255), 2)
+
+		#Imegem com comandos
+		comandos = cv.imread("Outros/Comandos.png")
 		
 		#Mostra a imagem capturada da câmera e da máscara de cor
 		cv.imshow("Camera", frame)
 		cv.imshow("Mascara", mascara)
+		cv.imshow("Comandos", comandos)
 
 	#Função de rastreamento
 	def Rastreamento(self):
@@ -175,7 +188,7 @@ class Imagem:
 		cv.imshow("Camera", frame)
 
 		#Retorna os valores do ponto X, Y, altura e largura
-		return self.x, self.y, largura, altura
+		return int(self.x), int(self.y), largura, altura
 
 
 
@@ -244,59 +257,58 @@ def Controle():
 
 
 #Função de aplicação do degrau e coleta de dados
-def Degrau(sentido):
-	global angulo_X
-	global angulo_Y
-	cv.destroyAllWindows()
-	if sentido == "cima":
-		novo_Y = angulo_Y + 10
-		novo_X = angulo_X
-	if sentido == "baixo":
-		novo_Y = angulo_Y - 10
-		novo_X = angulo_X
-	if sentido == "esquerda":
-		novo_X = angulo_X + 10
-		novo_Y = angulo_Y
-	if sentido == "direita":
-		novo_X = angulo_X - 10
-		novo_Y = angulo_Y
-	print("N:Angulo X:Posicao X:Angulo Y:Posicao Y")
-	N = 0
-	while True:
-		inicio = time.perf_counter()
-		if N == 60:
-			angulo_X = novo_X
-			angulo_Y = novo_Y
-			MoverMotores()
-		posX, posY, _, _ = Cam.Rastreamento()
-		print("%s:%s:%s:%s:%s" % (N,angulo_X,posX,angulo_Y,posY))
-		tecla = cv.waitKey(1) #Utilizado por limitação do compilador
-		if N == 120:
-			break
-		N = N+1
-		while ((time.perf_counter() - inicio) < def_amostragem):
-			pass
-
-
-def Ensaio_WhiteNoise(eixo):
+def Ensaio_Identificacao(comando):
 	cv.destroyAllWindows()
 	global angulo_X
 	global angulo_Y
 	angulo_X_inicial = angulo_X
 	angulo_Y_inicial = angulo_Y
 	posX_inicial, posY_inicial, _, _ = Cam.Rastreamento()
-	if eixo == "x": def_eixo = 0
-	if eixo == "y": def_eixo = 1
-	u = [None]*501
-	value = [None]*501
-	sinal = open("Degrau.txt", "r")
+
+	agora = datetime.now()
+	agora_string = agora.strftime("%d,%m,%Y %H;%M;%S")	
+	
+	if comando == "Ruido Branco X":
+		def_eixo = 0
+		entrada_txt = "Entrada/Entrada_RuidoBranco.txt"
+		saida_txt = "Saida/Resposta ao Ruido Branco no eixo X - " + agora_string + ".txt"
+		N = 501
+	if comando == "Ruido Branco Y":
+		def_eixo = 1
+		entrada_txt = "Entrada/Entrada_RuidoBranco.txt"
+		saida_txt = "Saida/Resposta ao Ruido Branco no eixo Y - " + agora_string + ".txt"
+		N = 501
+	if comando == "Degrau X+":
+		def_eixo = 0
+		entrada_txt = "Entrada/Entrada_Degrau_Positivo.txt"
+		saida_txt = "Saida/Resposta ao Degrau Positivo no eixo X - " + agora_string + ".txt"
+		N = 51
+	if comando == "Degrau X-":
+		def_eixo = 0
+		entrada_txt = "Entrada/Entrada_Degrau_Negativo.txt"
+		saida_txt = "Saida/Resposta ao Degrau Negativo no eixo X - " + agora_string + ".txt"
+		N = 51
+	if comando == "Degrau Y+":
+		def_eixo = 1
+		entrada_txt = "Entrada/Entrada_Degrau_Positivo.txt"
+		saida_txt = "Saida/Resposta ao Degrau Positivo no eixo Y - " + agora_string + ".txt"
+		N = 51
+	if comando == "Degrau Y-":
+		def_eixo = 1
+		entrada_txt = "Entrada/Entrada_Degrau_Negativo.txt"
+		saida_txt = "Saida/Resposta ao Degrau Negativo no eixo Y - " + agora_string + ".txt"
+		N = 51
+		
+	u = [None]*N
+	value = [None]*N
+	sinal = open(entrada_txt, "r")
 	k = 0
 	for line in sinal:
 		u[k] = float(line.rstrip())
 		k = k+1
 	sinal.close()
 	tudo_certo = True
-	for n in range(501):
+	for n in range(N):
 		inicio = time.perf_counter()
 		tecla = cv.waitKey(1) #Utilizado por limitação do compilador
 		angulo_X = angulo_X_inicial + u[n] * (1-def_eixo)
@@ -311,20 +323,11 @@ def Ensaio_WhiteNoise(eixo):
 			tudo_certo = False
 			break
 	if tudo_certo:
-		resposta = open("Resposta Degrau " + eixo + ".txt","w")
-		for k in range(501):
+		resposta = open(saida_txt,"w")
+		for k in range(N):
 			resposta.write(str((value[k] - float(posX_inicial*(1-def_eixo) + posY_inicial*(def_eixo)))) + "\n")
 		resposta.close()
 		print("Coleta Finalizada")
-
-
-
-
-
-
-
-
-
 
 
 
@@ -351,6 +354,8 @@ while True:
 			Cam.PreConfig(2)
 		if tecla == ord('c'):
 			Cam.PreConfig(3)
+		if tecla == ord('v'):
+			Cam.PreConfig(34)
 		if tecla == ord('w'):
 			ComandarMotores("cima")
 		if tecla == ord('s'):
@@ -382,16 +387,64 @@ while True:
 	if tecla == ord('e'):
 		cv.destroyAllWindows()
 		modo = 1
-	#Modo captura (Degrau)
+	#Modo captura de Dados
 	if tecla == ord('1'):
-		Ensaio_WhiteNoise("x")
+		x_inicial = angulo_X
+		y_inicial = angulo_Y
+		Ensaio_Identificacao("Ruido Branco X")
 		cv.destroyAllWindows()
+		angulo_X = x_inicial
+		angulo_Y = y_inicial
+		time.sleep(1)
+		MoverMotores()
+		time.sleep(1)
 	if tecla == ord('2'):
-		Ensaio_WhiteNoise("y")
+		x_inicial = angulo_X
+		y_inicial = angulo_Y
+		Ensaio_Identificacao("Ruido Branco Y")
 		cv.destroyAllWindows()
+		angulo_X = x_inicial
+		angulo_Y = y_inicial
+		time.sleep(1)
+		MoverMotores()
+		time.sleep(1)
 	if tecla == ord('3'):
-		Degrau("direita")
+		x_inicial = angulo_X
+		y_inicial = angulo_Y
+		Ensaio_Identificacao("Degrau X+")
 		cv.destroyAllWindows()
+		angulo_X = x_inicial
+		angulo_Y = y_inicial
+		time.sleep(1)
+		MoverMotores()
+		time.sleep(1)
 	if tecla == ord('4'):
-		Degrau("esquerda")
+		x_inicial = angulo_X
+		y_inicial = angulo_Y
+		Ensaio_Identificacao("Degrau X-")
 		cv.destroyAllWindows()
+		angulo_X = x_inicial
+		angulo_Y = y_inicial
+		time.sleep(1)
+		MoverMotores()
+		time.sleep(1)
+	if tecla == ord('5'):
+		x_inicial = angulo_X
+		y_inicial = angulo_Y
+		Ensaio_Identificacao("Degrau Y+")
+		cv.destroyAllWindows()
+		angulo_X = x_inicial
+		angulo_Y = y_inicial
+		time.sleep(1)
+		MoverMotores()
+		time.sleep(1)
+	if tecla == ord('6'):
+		x_inicial = angulo_X
+		y_inicial = angulo_Y
+		Ensaio_Identificacao("Degrau Y-")
+		cv.destroyAllWindows()
+		angulo_X = x_inicial
+		angulo_Y = y_inicial
+		time.sleep(1)
+		MoverMotores()
+		time.sleep(1)
