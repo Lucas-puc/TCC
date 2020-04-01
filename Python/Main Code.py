@@ -272,12 +272,12 @@ def Ensaio_Identificacao(comando):
 		def_eixo = 0
 		entrada_txt = "Entrada/Entrada_RuidoBranco.txt"
 		saida_txt = "Saida/Resposta ao Ruido Branco no eixo X - " + agora_string + ".txt"
-		N = 501
+		N = 251
 	if comando == "Ruido Branco Y":
 		def_eixo = 1
 		entrada_txt = "Entrada/Entrada_RuidoBranco.txt"
 		saida_txt = "Saida/Resposta ao Ruido Branco no eixo Y - " + agora_string + ".txt"
-		N = 501
+		N = 251
 	if comando == "Degrau X+":
 		def_eixo = 0
 		entrada_txt = "Entrada/Entrada_Degrau_Positivo.txt"
