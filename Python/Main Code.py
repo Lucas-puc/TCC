@@ -268,16 +268,16 @@ def Ensaio_Identificacao(comando):
 	agora = datetime.now()
 	agora_string = agora.strftime("%d,%m,%Y %H;%M;%S")	
 	
-	if comando == "Ruido Branco X":
+	if comando == "Binario Randomico X":
 		def_eixo = 0
-		entrada_txt = "Entrada/Entrada_RuidoBranco.txt"
-		saida_txt = "Saida/Resposta ao Ruido Branco no eixo X - " + agora_string + ".txt"
-		N = 251
+		entrada_txt = "Entrada/Entrada_BinRandom.txt"
+		saida_txt = "Saida/Resposta ao Binario Randomico no eixo X - " + agora_string + ".txt"
+		N = 51
 	if comando == "Ruido Branco Y":
 		def_eixo = 1
-		entrada_txt = "Entrada/Entrada_RuidoBranco.txt"
-		saida_txt = "Saida/Resposta ao Ruido Branco no eixo Y - " + agora_string + ".txt"
-		N = 251
+		entrada_txt = "Entrada/Entrada_BinRandom.txt"
+		saida_txt = "Saida/Resposta ao Binario Randomico no eixo Y - " + agora_string + ".txt"
+		N = 51
 	if comando == "Degrau X+":
 		def_eixo = 0
 		entrada_txt = "Entrada/Entrada_Degrau_Positivo.txt"
@@ -313,7 +313,8 @@ def Ensaio_Identificacao(comando):
 		tecla = cv.waitKey(1) #Utilizado por limitação do compilador
 		angulo_X = angulo_X_inicial + u[n] * (1-def_eixo)
 		angulo_Y = angulo_Y_inicial + u[n] * (def_eixo)
-		MoverMotores()
+		if n > 1 & u[n] != u[n-1]:
+			MoverMotores()
 		posX, posY, _, _ = Cam.Rastreamento()
 		value[n] = posX*(1-def_eixo) + posY*(def_eixo)
 		while time.perf_counter() - inicio < def_amostragem:
@@ -391,21 +392,21 @@ while True:
 	if tecla == ord('1'):
 		x_inicial = angulo_X
 		y_inicial = angulo_Y
-		Ensaio_Identificacao("Ruido Branco X")
+		Ensaio_Identificacao("Binario Randomico X")
 		cv.destroyAllWindows()
 		angulo_X = x_inicial
 		angulo_Y = y_inicial
-		time.sleep(1)
+		time.sleep(2)
 		MoverMotores()
 		time.sleep(1)
 	if tecla == ord('2'):
 		x_inicial = angulo_X
 		y_inicial = angulo_Y
-		Ensaio_Identificacao("Ruido Branco Y")
+		Ensaio_Identificacao("Binario Randomico Y")
 		cv.destroyAllWindows()
 		angulo_X = x_inicial
 		angulo_Y = y_inicial
-		time.sleep(1)
+		time.sleep(2)
 		MoverMotores()
 		time.sleep(1)
 	if tecla == ord('3'):
@@ -413,9 +414,13 @@ while True:
 		y_inicial = angulo_Y
 		Ensaio_Identificacao("Degrau X+")
 		cv.destroyAllWindows()
+		angulo_X = x_inicial - 10
+		angulo_Y = y_inicial
+		time.sleep(2)
+		MoverMotores()
 		angulo_X = x_inicial
 		angulo_Y = y_inicial
-		time.sleep(1)
+		time.sleep(2)
 		MoverMotores()
 		time.sleep(1)
 	if tecla == ord('4'):
@@ -423,9 +428,13 @@ while True:
 		y_inicial = angulo_Y
 		Ensaio_Identificacao("Degrau X-")
 		cv.destroyAllWindows()
+		angulo_X = x_inicial + 10
+		angulo_Y = y_inicial
+		time.sleep(2)
+		MoverMotores()
 		angulo_X = x_inicial
 		angulo_Y = y_inicial
-		time.sleep(1)
+		time.sleep(2)
 		MoverMotores()
 		time.sleep(1)
 	if tecla == ord('5'):
@@ -434,8 +443,12 @@ while True:
 		Ensaio_Identificacao("Degrau Y+")
 		cv.destroyAllWindows()
 		angulo_X = x_inicial
+		angulo_Y = y_inicial - 10
+		time.sleep(2)
+		MoverMotores()
+		angulo_X = x_inicial
 		angulo_Y = y_inicial
-		time.sleep(1)
+		time.sleep(2)
 		MoverMotores()
 		time.sleep(1)
 	if tecla == ord('6'):
@@ -444,7 +457,11 @@ while True:
 		Ensaio_Identificacao("Degrau Y-")
 		cv.destroyAllWindows()
 		angulo_X = x_inicial
+		angulo_Y = y_inicial + 10
+		time.sleep(2)
+		MoverMotores()
+		angulo_X = x_inicial
 		angulo_Y = y_inicial
-		time.sleep(1)
+		time.sleep(2)
 		MoverMotores()
 		time.sleep(1)
