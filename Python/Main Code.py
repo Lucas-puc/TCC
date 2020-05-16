@@ -15,8 +15,8 @@ def_com = 6            #Define a porta serial utilizada pelo Arduino
 def_amostragem = 0.04   #Define a taxa de amostragem em segundos
 angulo_X = 90           #Posição inicial do motor responsável pelo eixo X
 angulo_Y = 90           #Posição inicial do motor responsável pelo eixo Y
-erroacX = 0
-erroacY = 0
+
+
 
 #Objeto para processamento de imagem
 class Imagem:
@@ -26,6 +26,7 @@ class Imagem:
 		time.sleep(2)
 		self.x = 100
 		self.y = 100
+		self.raio = 0
 		self.inicio_status = 1
 
 	def __del__(self):
@@ -36,10 +37,10 @@ class Imagem:
 	def PreConfig(self, numero):
 		if numero == 1:
 			#Valores Iniciais (pre-config 1):
-			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 0)
-			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 148)
-			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 6)
-			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 10)
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 37)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 79)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 26)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 64)
 			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
 			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		if numero == 2:
@@ -54,18 +55,18 @@ class Imagem:
 			#Valores Iniciais (pre-config 3):
 			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 5)
 			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 139)
-			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 14)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 113)
 			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 28)
 			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 248)
 			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		if numero == 4:
-			#Valores Iniciais (pre-config 3):
-			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 5)
-			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 139)
-			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 14)
-			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 28)
-			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 248)
-			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
+			#Valores Iniciais (pre-config 4):
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 77)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 77)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 0)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 131)
+			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 222)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 125)
 		if numero == 0:
 			#Utilizar os valores atuais
 			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", self.cor_min[0])
@@ -124,20 +125,20 @@ class Imagem:
 		#Realização de Operações Morfológicas para filtrar a máscara e remover pontos indesejados
 		mascara = cv.erode(mascara, None, iterations=2)
 		mascara = cv.dilate(mascara, None, iterations=2)
-
+	
 		#Encontra os contornos da máscara, os reúne e inicializa a variável correspondente ao centro do círculo
 		contornos = cv.findContours(mascara.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 		contornos = imutils.grab_contours(contornos)
 
-		#Testa se algum contorno foi encontrado
+		#Testa se algum contorno foi encontraod
 		if len(contornos) > 0:
 			#Usa o maior contorno encontrado para calcular o raio e o centro do circulo
 			c = max(contornos, key=cv.contourArea)
 			((self.x, self.y), raio) = cv.minEnclosingCircle(c)
 			#Testa o raio do circulo para evitar ruídos
 			if raio > 10:
-			    #Desenha o circulo (cor em BGR)
-			    cv.circle(frame, (int(self.x), int(self.y)), int(raio), (0, 0, 255), 2)
+				#Desenha o circulo (cor em BGR)
+				cv.circle(frame, (int(self.x), int(self.y)), int(raio), (0, 0, 255), 2)
 
 		#Imegem com comandos
 		comandos = cv.imread("Outros/Comandos.png")
@@ -173,12 +174,12 @@ class Imagem:
 		if len(contornos) > 0:
 			#Usa o maior contorno encontrado para calcular o raio e o centro do circulo
 			c = max(contornos, key=cv.contourArea)
-			((self.x, self.y), raio) = cv.minEnclosingCircle(c)
+			((self.x, self.y), self.raio) = cv.minEnclosingCircle(c)
 			#Testa o raio do circulo para evitar ruídos
-			if raio > 10:
+			if self.raio > 10:
 				#Desenha cruz no centro do circulo
-				cv.line(frame, (int(self.x-raio/4), int(self.y)), (int(self.x+raio/4), int(self.y)), (0, 0, 255), 1)
-				cv.line(frame, (int(self.x), int(self.y-raio/4)), (int(self.x), int(self.y+raio/4)), (0, 0, 255), 1)
+				cv.line(frame, (int(self.x-self.raio/4), int(self.y)), (int(self.x+self.raio/4), int(self.y)), (0, 0, 255), 1)
+				cv.line(frame, (int(self.x), int(self.y-self.raio/4)), (int(self.x), int(self.y+self.raio/4)), (0, 0, 255), 1)
 
 		#Desenha uma cruz no centro do frame
 		cv.line(frame, (largura//2-10, altura//2), (largura//2+10, altura//2), (255, 0, 0), 1)
@@ -187,118 +188,78 @@ class Imagem:
 		#Mostra a imagem capturada da câmera
 		cv.imshow("Camera", frame)
 
-		#Retorna os valores do ponto X, Y, altura e largura
-		return int(self.x), int(self.y), largura, altura
+		
+		#Retorna os valores de erro até o centro e raio
+		return int(self.x - largura/2), int(self.y - altura/2), self.raio
 
 
 
 
-#Função que movimenta os motores de acordo com as variáveis globais
-def MoverMotores():
+#Funções que movimenta os motores de acordo com as variáveis globais
+def MoverMotores(valorX, valorY):
 	global angulo_X
 	global angulo_Y
+	if valorX != 0 or valorY != 0:
+		angulo_X = angulo_X + valorX
+		angulo_Y = angulo_Y + valorY
+		if angulo_X > 180 : angulo_X = 180 
+		if angulo_X < 0 : angulo_X = 0
+		if angulo_Y > 180 : angulo_Y = 180 
+		if angulo_Y < 0 : angulo_Y = 0 
+		mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y)) + "f"
+		mensagem = str.encode(mensagem)
+		arduino.write(mensagem)
 
-	#Saturação
-	if angulo_X > 180 : angulo_X = 180 
-	if angulo_X < 0 : angulo_X = 0 
-	if angulo_Y > 180 : angulo_Y = 180 
-	if angulo_Y < 0 : angulo_Y = 0 
-
-	#Envia comando para o arduino
-	mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y))
-	#print(mensagem)
+def AjustaMotores():
+	global angulo_X
+	global angulo_Y
+	mensagem = "X" + str(int(angulo_X)) + "Y" + str(int(angulo_Y)) + "f"
 	mensagem = str.encode(mensagem)
 	arduino.write(mensagem)
 
 
-
-#Função de comandos para os motores
-def ComandarMotores(direcao):
-	global angulo_X
-	global angulo_Y
-
-	if direcao == "cima":
-		angulo_Y = angulo_Y+1
-	if direcao == "baixo":
-		angulo_Y = angulo_Y-1
-	if direcao == "esquerda":
-		angulo_X = angulo_X+1
-	if direcao == "direita":
-		angulo_X = angulo_X-1
-	MoverMotores()
-
 		
 
-#Função de aplicação do Controlador
-def Controle():
-	global angulo_X
-	global angulo_Y
-	global erroacX
-	global erroacY
-	posX, posY, tamX, tamY = Cam.Rastreamento()
-
-	#Calculo do erro
-	erro_X = posX - tamX/2
-	erro_Y =posY - tamY/2
-	erroacX = erro_X + erroacX
-	erroacY = erro_Y + erroacY
-
-	#Aplica o controle
-	controle_X = 0*erroacX + erro_X/100
-	controle_Y = 0*erroacY + erro_Y/100
-
-	#Ajusta a saída
-	angulo_X = angulo_X - controle_X
-	angulo_Y = angulo_Y - controle_Y
-
-	#Movimentação dos Motores
-	MoverMotores()
-
+def Centraliza():
+	print("Centralizando Camera....")
+	while True:
+		time.sleep(2)
+		erroX, erroY, _ = Cam.Rastreamento()
+		done = True
+		if erroX > 3:
+			MoverMotores(-1,0)
+			done = False
+		if erroX < -3:
+			MoverMotores(1,0)
+			done = False
+		if erroY > 3:
+			MoverMotores(0,-1)
+			done = False
+		if erroY < -3:
+			MoverMotores(0,1)
+			done = False
+		if done: break
+		tecla = cv.waitKey(1)
+		if tecla != -1:
+			break
+		time.sleep(1)
 
 
-#Função de aplicação do degrau e coleta de dados
-def Ensaio_Identificacao(comando):
+#Função para coletar dados automaticamente
+def EnsaioIdentX():
+
+	#Centralização da Camera
 	cv.destroyAllWindows()
-	global angulo_X
-	global angulo_Y
-	angulo_X_inicial = angulo_X
-	angulo_Y_inicial = angulo_Y
-	posX_inicial, posY_inicial, _, _ = Cam.Rastreamento()
-
+	print("Inicializando processo automatizado de coleta de dados - Eixo X")
 	agora = datetime.now()
-	agora_string = agora.strftime("%d,%m,%Y %H;%M;%S")	
-	
-	if comando == "Binario Randomico X":
-		def_eixo = 0
-		entrada_txt = "Entrada/Entrada_BinRandom.txt"
-		saida_txt = "Saida/Resposta ao Binario Randomico no eixo X - " + agora_string + ".txt"
-		N = 51
-	if comando == "Ruido Branco Y":
-		def_eixo = 1
-		entrada_txt = "Entrada/Entrada_BinRandom.txt"
-		saida_txt = "Saida/Resposta ao Binario Randomico no eixo Y - " + agora_string + ".txt"
-		N = 51
-	if comando == "Degrau X+":
-		def_eixo = 0
-		entrada_txt = "Entrada/Entrada_Degrau_Positivo.txt"
-		saida_txt = "Saida/Resposta ao Degrau Positivo no eixo X - " + agora_string + ".txt"
-		N = 51
-	if comando == "Degrau X-":
-		def_eixo = 0
-		entrada_txt = "Entrada/Entrada_Degrau_Negativo.txt"
-		saida_txt = "Saida/Resposta ao Degrau Negativo no eixo X - " + agora_string + ".txt"
-		N = 51
-	if comando == "Degrau Y+":
-		def_eixo = 1
-		entrada_txt = "Entrada/Entrada_Degrau_Positivo.txt"
-		saida_txt = "Saida/Resposta ao Degrau Positivo no eixo Y - " + agora_string + ".txt"
-		N = 51
-	if comando == "Degrau Y-":
-		def_eixo = 1
-		entrada_txt = "Entrada/Entrada_Degrau_Negativo.txt"
-		saida_txt = "Saida/Resposta ao Degrau Negativo no eixo Y - " + agora_string + ".txt"
-		N = 51
-		
+	inicio_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Inicio: " + inicio_info)
+	Centraliza()
+
+	#Importando sinal de degrau
+	entrada_txt = "Entrada/Degrau.txt"
+	sinal = open(entrada_txt, "r")
+	N = len(sinal.readlines())
 	u = [None]*N
 	value = [None]*N
 	sinal = open(entrada_txt, "r")
@@ -307,32 +268,184 @@ def Ensaio_Identificacao(comando):
 		u[k] = float(line.rstrip())
 		k = k+1
 	sinal.close()
-	tudo_certo = True
-	for n in range(N):
+	_, _, raio_inicio = Cam.Rastreamento()
+
+	
+
+	#Processo no eixo X                
+	print("Camera centralizada. Iniciando processo de ensaios para o eixo X.")
+	
+	for m in range(0,100):        
+		tudo_certo = False
+		
+		while not tudo_certo:			
+			inicioX, _, _ = Cam.Rastreamento()
+			aux = 1
+			if m % 2 == 0: aux = -1
+			if m < 50: aux = -1
+			if m < 25: aux = 1
+			tudo_certo = True
+			
+			for n in range(N):
+				inicio = time.perf_counter()
+				tecla = cv.waitKey(1) #Utilizado por limitação do compilador
+				if n > 0 and u[n] != u[n-1]: MoverMotores(aux*u[n],0)
+				value[n], _, _ = Cam.Rastreamento()
+				while time.perf_counter() - inicio < def_amostragem:
+					pass
+				if (time.perf_counter() - inicio) > 0.045 :
+					print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
+					tudo_certo = False
+		
+			saida_txt = "Saida/X/Saida" + str(m+1) + ".txt"
+			resposta = open(saida_txt,"w")
+			
+			for k in range(N):
+				resposta.write(str((value[k] - inicioX)) + "\n")
+				
+			resposta.close()
+			time.sleep(1)
+			MoverMotores(-aux*u[N-1], 0)
+			time.sleep(1)
+			errX, _, _ = Cam.Rastreamento()
+			if abs(inicioX - errX) > 5 : Centraliza()
+			time.sleep(1)
+
+	print("Processo de coleta finalizado.")
+	agora = datetime.now()
+	final_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Final: " + final_info)
+	raio_txt = "Saida/X/Info Ensaio.txt"
+	info_raio = open(raio_txt,"w")
+	info_raio.write("Ensaio de coleta de resposta ao degrau para o eixo X\n")
+	info_raio.write("Raio (pixels): " + str(raio_inicio) + "\n")
+	info_raio.write("Inicio: " + inicio_info + "\n")
+	info_raio.write("Final: " + final_info + "\n")
+	info_raio.close()
+
+
+
+
+
+def EnsaioIdentY():
+
+	#Centralização da Camera
+	cv.destroyAllWindows()
+	print("Inicializando processo automatizado de coleta de dados")
+	agora = datetime.now()
+	inicio_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Inicio: " + inicio_info)
+	Centraliza()
+
+	#Importando sinal de degrau
+	entrada_txt = "Entrada/Degrau.txt"
+	sinal = open(entrada_txt, "r")
+	N = len(sinal.readlines())
+	u = [None]*N
+	value = [None]*N
+	
+	sinal = open(entrada_txt, "r")
+	k = 0
+	for line in sinal:
+		u[k] = float(line.rstrip())
+		k = k+1
+	sinal.close()
+	_, _, raio_inicio = Cam.Rastreamento()
+
+	
+
+	#Processo no eixo Y               
+	print("Camera centralizada. Iniciando processo de ensaios para o eixo Y.")
+	
+	for m in range(0,100):        
+		tudo_certo = False
+		while not tudo_certo:
+			_, inicioY, _ = Cam.Rastreamento()
+
+			aux = 1
+			if m % 2 == 0: aux = -1
+			if m < 50: aux = -1
+			if m < 25: aux = 1
+			
+			tudo_certo = True
+			for n in range(N):
+				inicio = time.perf_counter()
+				tecla = cv.waitKey(1) #Utilizado por limitação do compilador
+				if n > 0 and u[n] != u[n-1]: MoverMotores(0,aux*u[n])
+				_, value[n], _ = Cam.Rastreamento()
+				while time.perf_counter() - inicio < def_amostragem:
+					pass
+				if (time.perf_counter() - inicio) > 0.045 :
+					print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
+					tudo_certo = False
+
+			saida_txt = "Saida/Y/Saida" + str(m+1) + ".txt"
+			resposta = open(saida_txt,"w")
+			for k in range(N):
+				resposta.write(str((value[k] - inicioY)) + "\n")
+			resposta.close()
+			time.sleep(1)
+			MoverMotores(0, -aux*u[N-1])
+			time.sleep(1)
+			_, errY, _ = Cam.Rastreamento()
+			if abs(inicioY - errY) > 5 : Centraliza()
+			time.sleep(1)
+
+	print("Processo de coleta finalizado.")
+	agora = datetime.now()
+	final_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Final: " + final_info)
+	raio_txt = "Saida/Y/Info Ensaio.txt"
+	info_raio = open(raio_txt,"w")
+	info_raio.write("Ensaio de coleta de resposta ao degrau para o eixo Y\n")
+	info_raio.write("Raio (pixels): " + str(raio_inicio) + "\n")
+	info_raio.write("Inicio: " + inicio_info + "\n")
+	info_raio.write("Final: " + final_info + "\n")
+	info_raio.close()
+
+
+#Função de aplicação do Controlador
+def Controle():
+	cX1 = 0
+	cX2 = 0
+	eX1 = 0
+	eX2 = 0
+	cY1 = 0
+	cY2 = 0
+	eY1 = 0
+	eY2 = 0
+	
+	while True:
 		inicio = time.perf_counter()
-		tecla = cv.waitKey(1) #Utilizado por limitação do compilador
-		angulo_X = angulo_X_inicial + u[n] * (1-def_eixo)
-		angulo_Y = angulo_Y_inicial + u[n] * (def_eixo)
-		if n > 1 & u[n] != u[n-1]:
-			MoverMotores()
-		posX, posY, _, _ = Cam.Rastreamento()
-		value[n] = posX*(1-def_eixo) + posY*(def_eixo)
-		while time.perf_counter() - inicio < def_amostragem:
-			pass
-		if time.perf_counter() - inicio > 0.05 :
-			print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
-			tudo_certo = False
-			break
-	if tudo_certo:
-		resposta = open(saida_txt,"w")
-		for k in range(N):
-			resposta.write(str((value[k] - float(posX_inicial*(1-def_eixo) + posY_inicial*(def_eixo)))) + "\n")
-		resposta.close()
-		print("Coleta Finalizada")
+		
+		eX, eY, r = Cam.Rastreamento()
+		eX = eX*(-1)
+		
+		cX = cX1*1.108-cX2*0.1088+eX*0.05322-eX1*0.04188+eX2*0.01001
+		cX2 = cX1
+		cX1 = cX
+		eX2 = eX1
+		eX1 = eX
+		
+		cY = cY1*1.117-cY2*0.1168+eY*0.04809-eY1*0.03559+eY2*0.008265
+		cY2 = cY1
+		cY1 = cY
+		eY2 = eY1
+		eY1 = eY
+	
+		#Movimentação dos Motores
+		MoverMotores(cX, 0)
+		
+		if cv.waitKey != -1: break
+		
+		while time.perf_counter() - inicio < def_amostragem: pass
+		
+		if (time.perf_counter() - inicio) > 0.045 : print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
 
 
+	
 
-		       #MAIN CODE		
+			   #MAIN CODE		
 
 
 
@@ -340,9 +453,12 @@ Cam = Imagem(def_camera) #inicializa camera
 modo = 0 #Inicializa com o modo de ajuste da máscara
 
 #Inicialização do Arduino
-arduino = serial.Serial('COM'+str(def_com), 9600, timeout = 1)
-time.sleep(2)
+arduino = serial.Serial('COM'+str(def_com), 9600)
 print("Inicializando comunicação...")
+time.sleep(2)
+AjustaMotores()
+
+
 
 while True:
 	#Modo de ajuste de máscara
@@ -356,15 +472,15 @@ while True:
 		if tecla == ord('c'):
 			Cam.PreConfig(3)
 		if tecla == ord('v'):
-			Cam.PreConfig(34)
+			Cam.PreConfig(4)
 		if tecla == ord('w'):
-			ComandarMotores("cima")
+			MoverMotores(0, 1)
 		if tecla == ord('s'):
-			ComandarMotores("baixo")
+			MoverMotores(0, -1)
 		if tecla == ord('a'):
-			ComandarMotores("esquerda")
+			MoverMotores(1, 0)
 		if tecla == ord('d'):
-			ComandarMotores("direita")
+			MoverMotores(-1, 0)
 		if tecla != -1:
 			break
 	#Modo com controle aplicado
@@ -390,78 +506,6 @@ while True:
 		modo = 1
 	#Modo captura de Dados
 	if tecla == ord('1'):
-		x_inicial = angulo_X
-		y_inicial = angulo_Y
-		Ensaio_Identificacao("Binario Randomico X")
-		cv.destroyAllWindows()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		time.sleep(1)
-	if tecla == ord('2'):
-		x_inicial = angulo_X
-		y_inicial = angulo_Y
-		Ensaio_Identificacao("Binario Randomico Y")
-		cv.destroyAllWindows()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		time.sleep(1)
-	if tecla == ord('3'):
-		x_inicial = angulo_X
-		y_inicial = angulo_Y
-		Ensaio_Identificacao("Degrau X+")
-		cv.destroyAllWindows()
-		angulo_X = x_inicial - 10
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		time.sleep(1)
-	if tecla == ord('4'):
-		x_inicial = angulo_X
-		y_inicial = angulo_Y
-		Ensaio_Identificacao("Degrau X-")
-		cv.destroyAllWindows()
-		angulo_X = x_inicial + 10
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		time.sleep(1)
-	if tecla == ord('5'):
-		x_inicial = angulo_X
-		y_inicial = angulo_Y
-		Ensaio_Identificacao("Degrau Y+")
-		cv.destroyAllWindows()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial - 10
-		time.sleep(2)
-		MoverMotores()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		time.sleep(1)
-	if tecla == ord('6'):
-		x_inicial = angulo_X
-		y_inicial = angulo_Y
-		Ensaio_Identificacao("Degrau Y-")
-		cv.destroyAllWindows()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial + 10
-		time.sleep(2)
-		MoverMotores()
-		angulo_X = x_inicial
-		angulo_Y = y_inicial
-		time.sleep(2)
-		MoverMotores()
-		time.sleep(1)
+		EnsaioIdentX()
+		time.sleep(4)
+		EnsaioIdentY()

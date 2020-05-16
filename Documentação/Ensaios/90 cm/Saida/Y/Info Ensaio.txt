@@ -1,0 +1,4 @@
+Ensaio de coleta de resposta ao degrau para o eixo Y
+Raio (pixels): 36.36376190185547
+Inicio: 07,05,2020 17;39;04
+Final: 07,05,2020 17;58;30
