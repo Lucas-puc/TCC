@@ -404,6 +404,211 @@ def EnsaioIdentY():
 	info_raio.close()
 
 
+def EnsaioValidX():
+
+	#Centralização da Camera
+	cv.destroyAllWindows()
+	print("Inicializando processo automatizado de coleta de dados - Eixo X")
+	agora = datetime.now()
+	inicio_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Inicio: " + inicio_info)
+	Centraliza()
+
+	#Importando sinal de degrau
+	entrada_txt = "Validação/U.txt"
+	sinal = open(entrada_txt, "r")
+	N = len(sinal.readlines())
+	u = [None]*N
+	value = [None]*N
+	ctrl = [None]*N
+	sinal = open(entrada_txt, "r")
+	k = 0
+	for line in sinal:
+		u[k] = float(line.rstrip())
+		k = k+1
+	sinal.close()
+	_, _, raio_inicio = Cam.Rastreamento()
+
+	
+
+	#Processo no eixo X                
+	print("Camera centralizada. Iniciando processo validacao para o eixo X.")
+	
+	for m in range(0,100):        
+		tudo_certo = False
+		
+		while not tudo_certo:			
+			inicioX, _, _ = Cam.Rastreamento()
+			aux = 1
+			if m % 2 == 0: aux = -1
+			if m < 50: aux = -1
+			if m < 25: aux = 1
+			tudo_certo = True
+			cX1 = 0
+			cX2 = 0
+			eX1 = 0
+			eX2 = 0
+			
+			for n in range(N):
+				inicio = time.perf_counter()
+				tecla = cv.waitKey(1) #Utilizado por limitação do compilador
+
+				value[n], _, _ = Cam.Rastreamento()
+				
+				eX = aux*u[n] - value[n]
+				
+				cX = cX1*1.108-cX2*0.1088+eX*0.05322-eX1*0.04188+eX2*0.01001
+				cX2 = cX1
+				cX1 = cX
+				eX2 = eX1
+				eX1 = eX
+
+				ctrl[n] = cX
+				MoverMotores(Cx,0)
+				while time.perf_counter() - inicio < def_amostragem:
+					pass
+				if (time.perf_counter() - inicio) > 0.045 :
+					print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
+					tudo_certo = False
+		
+			saida_txt = "Validação/X/Saida" + str(m+1) + ".txt"
+			resposta = open(saida_txt,"w")
+			
+			for k in range(N):
+				resposta.write(str((value[k] - inicioX)) + "\n")
+				
+			resposta.close()
+
+			ctrl_txt = "Validação/X/Controle" + str(m+1) + ".txt"
+			resposta = open(ctrl_txt,"w")
+			
+			for k in range(N):
+				resposta.write(str(ctrl[k]) + "\n")
+				
+			resposta.close()
+			
+			time.sleep(1)
+			MoverMotores(-aux*u[N-1], 0)
+			time.sleep(1)
+			errX, _, _ = Cam.Rastreamento()
+			if abs(inicioX - errX) > 5 : Centraliza()
+			time.sleep(1)
+
+	print("Processo de coleta finalizado.")
+	agora = datetime.now()
+	final_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Final: " + final_info)
+	raio_txt = "Saida/X/Info Ensaio.txt"
+	info_raio = open(raio_txt,"w")
+	info_raio.write("Ensaio de coleta de resposta ao degrau para o eixo X\n")
+	info_raio.write("Raio (pixels): " + str(raio_inicio) + "\n")
+	info_raio.write("Inicio: " + inicio_info + "\n")
+	info_raio.write("Final: " + final_info + "\n")
+	info_raio.close()
+
+
+def EnsaioValidY():
+
+	#Centralização da Camera
+	cv.destroyAllWindows()
+	print("Inicializando processo automatizado de coleta de dados")
+	agora = datetime.now()
+	inicio_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Inicio: " + inicio_info)
+	Centraliza()
+
+	#Importando sinal de degrau
+	entrada_txt = "Validação/U.txt"
+	sinal = open(entrada_txt, "r")
+	N = len(sinal.readlines())
+	u = [None]*N
+	value = [None]*N
+	ctrl = [None]*N
+	
+	sinal = open(entrada_txt, "r")
+	k = 0
+	for line in sinal:
+		u[k] = float(line.rstrip())
+		k = k+1
+	sinal.close()
+	_, _, raio_inicio = Cam.Rastreamento()
+
+	
+
+	#Processo no eixo Y               
+	print("Camera centralizada. Iniciando processo de validacao para o eixo Y.")
+	
+	for m in range(0,100):        
+		tudo_certo = False
+		while not tudo_certo:
+			_, inicioY, _ = Cam.Rastreamento()
+
+			aux = 1
+			if m % 2 == 0: aux = -1
+			if m < 50: aux = -1
+			if m < 25: aux = 1
+			
+			tudo_certo = True
+			cY1 = 0
+			cY2 = 0
+			eY1 = 0
+			eY2 = 0
+			
+			for n in range(N):
+				inicio = time.perf_counter()
+				tecla = cv.waitKey(1) #Utilizado por limitação do compilador
+
+				_, value[n], _ = Cam.Rastreamento()
+				
+				eY = aux*u[n] - value[n]
+				
+				cY = cY1*1.117-cY2*0.1168+eY*0.04809-eY1*0.03559+eY2*0.008265
+				cY2 = cY1
+				cY1 = cY
+				eY2 = eY1
+				eY1 = eY
+
+				ctrl[n] = cY
+				MoverMotores(0,cY)
+				while time.perf_counter() - inicio < def_amostragem:
+					pass
+				if (time.perf_counter() - inicio) > 0.045 :
+					print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
+					tudo_certo = False
+
+			saida_txt = "Validação/Y/Saida" + str(m+1) + ".txt"
+			resposta = open(saida_txt,"w")
+			for k in range(N):
+				resposta.write(str((value[k] - inicioY)) + "\n")
+			resposta.close()
+
+			ctrl_txt = "Validação/Y/Controle" + str(m+1) + ".txt"
+			resposta = open(ctrl_txt,"w")	
+			for k in range(N):
+				resposta.write(str(ctrl[k]) + "\n")	
+			resposta.close()
+			
+			time.sleep(1)
+			MoverMotores(0, -aux*u[N-1])
+			time.sleep(1)
+			_, errY, _ = Cam.Rastreamento()
+			if abs(inicioY - errY) > 5 : Centraliza()
+			time.sleep(1)
+
+	print("Processo de coleta finalizado.")
+	agora = datetime.now()
+	final_info = agora.strftime("%d,%m,%Y %H;%M;%S")
+	print("Final: " + final_info)
+	raio_txt = "Saida/Y/Info Ensaio.txt"
+	info_raio = open(raio_txt,"w")
+	info_raio.write("Ensaio de coleta de resposta ao degrau para o eixo Y\n")
+	info_raio.write("Raio (pixels): " + str(raio_inicio) + "\n")
+	info_raio.write("Inicio: " + inicio_info + "\n")
+	info_raio.write("Final: " + final_info + "\n")
+	info_raio.close()
+
+
+
 #Função de aplicação do Controlador
 def Controle():
 	cX1 = 0
