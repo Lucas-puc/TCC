@@ -457,7 +457,7 @@ def EnsaioValidX():
 				
 				eX = aux*u[n] - value[n]
 				
-				cX = cX1*1.108-cX2*0.1088+eX*0.05322-eX1*0.04188+eX2*0.01001
+				cX = 1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2
 				cX2 = cX1
 				cX1 = cX
 				eX2 = eX1
@@ -562,7 +562,7 @@ def EnsaioValidY():
 				
 				eY = aux*u[n] - value[n]
 				
-				cY = cY1*1.117-cY2*0.1168+eY*0.04809-eY1*0.03559+eY2*0.008265
+				cY = 1.108*cY1-0.1082*cY2+0.05322*eY-0.04188*eY1+0.01001*eY2
 				cY2 = cY1
 				cY1 = cY
 				eY2 = eY1
@@ -626,20 +626,20 @@ def Controle():
 		eX, eY, r = Cam.Rastreamento()
 		eX = eX*(-1)
 		
-		cX = cX1*1.108-cX2*0.1088+eX*0.05322-eX1*0.04188+eX2*0.01001
+		cX = 1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2
 		cX2 = cX1
 		cX1 = cX
 		eX2 = eX1
 		eX1 = eX
 		
-		cY = cY1*1.117-cY2*0.1168+eY*0.04809-eY1*0.03559+eY2*0.008265
+		cY = 1.108*cY1-0.1082*cY2+0.05322*eY-0.04188*eY1+0.01001*eY2
 		cY2 = cY1
 		cY1 = cY
 		eY2 = eY1
 		eY1 = eY
 	
 		#Movimentação dos Motores
-		MoverMotores(cX, 0)
+		MoverMotores(cX, cY)
 		
 		if cv.waitKey != -1: break
 		
