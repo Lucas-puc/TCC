@@ -10,8 +10,8 @@ def nada(x):
 
 
 #Parâmetros
-def_camera = 0          #Define a câmera a ser utilizada (integrada = 0)
-def_com = 6            #Define a porta serial utilizada pelo Arduino
+def_camera = 1          #Define a câmera a ser utilizada (PC = 0 Note = 1)
+def_com = 7            #Define a porta serial utilizada pelo Arduino (PC = 6 Note = 7)
 def_amostragem = 0.04   #Define a taxa de amostragem em segundos
 angulo_X = 90           #Posição inicial do motor responsável pelo eixo X
 angulo_Y = 90           #Posição inicial do motor responsável pelo eixo Y
@@ -45,12 +45,12 @@ class Imagem:
 			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		if numero == 2:
 			#Valores Iniciais (pre-config 2):
-			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 15)
-			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 98)
-			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 18)
-			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 32)
+			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 0)
+			cv.setTrackbarPos("Min-S", "Ajuste de Mascara", 117)
+			cv.setTrackbarPos("Min-V", "Ajuste de Mascara", 73)
+			cv.setTrackbarPos("Max-H", "Ajuste de Mascara", 4)
 			cv.setTrackbarPos("Max-S", "Ajuste de Mascara", 255)
-			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 91)
+			cv.setTrackbarPos("Max-V", "Ajuste de Mascara", 255)
 		if numero == 3:
 			#Valores Iniciais (pre-config 3):
 			cv.setTrackbarPos("Min-H", "Ajuste de Mascara", 5)
@@ -197,6 +197,8 @@ class Imagem:
 
 #Funções que movimenta os motores de acordo com as variáveis globais
 def MoverMotores(valorX, valorY):
+	valorY = int(valorY)
+	valorX = int(valorX)
 	global angulo_X
 	global angulo_Y
 	if valorX != 0 or valorY != 0:
@@ -457,14 +459,14 @@ def EnsaioValidX():
 				
 				eX = aux*u[n] - value[n]
 				
-				cX = 1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2
+				cX = round(1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2)
 				cX2 = cX1
 				cX1 = cX
 				eX2 = eX1
 				eX1 = eX
 
 				ctrl[n] = cX
-				MoverMotores(Cx,0)
+				MoverMotores(cX,0)
 				while time.perf_counter() - inicio < def_amostragem:
 					pass
 				if (time.perf_counter() - inicio) > 0.045 :
@@ -625,8 +627,9 @@ def Controle():
 		
 		eX, eY, r = Cam.Rastreamento()
 		eX = eX*(-1)
+		eY = eY*(-1)
 		
-		cX = 1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2
+		cX = round(1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2)
 		cX2 = cX1
 		cX1 = cX
 		eX2 = eX1
@@ -639,7 +642,7 @@ def Controle():
 		eY1 = eY
 	
 		#Movimentação dos Motores
-		MoverMotores(cX, cY)
+		MoverMotores(0, cY)
 		
 		if cv.waitKey != -1: break
 		
@@ -714,3 +717,7 @@ while True:
 		EnsaioIdentX()
 		time.sleep(4)
 		EnsaioIdentY()
+	if tecla == ord('2'):
+		EnsaioValidX()
+		time.sleep(4)
+		EnsaioValidY()
