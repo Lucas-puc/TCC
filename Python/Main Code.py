@@ -10,8 +10,8 @@ def nada(x):
 
 
 #Parâmetros
-def_camera = 1          #Define a câmera a ser utilizada (PC = 0 Note = 1)
-def_com = 7            #Define a porta serial utilizada pelo Arduino (PC = 6 Note = 7)
+def_camera = 0          #Define a câmera a ser utilizada (PC = 0 Note = 1)
+def_com = 6            #Define a porta serial utilizada pelo Arduino (PC = 6 Note = 7)
 def_amostragem = 0.04   #Define a taxa de amostragem em segundos
 angulo_X = 90           #Posição inicial do motor responsável pelo eixo X
 angulo_Y = 90           #Posição inicial do motor responsável pelo eixo Y
@@ -169,6 +169,7 @@ class Imagem:
 		#Encontra os contornos da máscara, os reúne e inicializa a variável correspondente ao centro do círculo
 		contornos = cv.findContours(mascara.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 		contornos = imutils.grab_contours(contornos)
+		if len(contornos) == 0: self.raio = 0
 
 		#Testa se algum contorno foi encontrado
 		if len(contornos) > 0:
@@ -197,10 +198,12 @@ class Imagem:
 
 #Funções que movimenta os motores de acordo com as variáveis globais
 def MoverMotores(valorX, valorY):
-	valorY = int(valorY)
-	valorX = int(valorX)
 	global angulo_X
 	global angulo_Y
+	
+	valorY = int(round(valorY))
+	valorX = int(round(valorX))
+
 	if valorX != 0 or valorY != 0:
 		angulo_X = angulo_X + valorX
 		angulo_Y = angulo_Y + valorY
@@ -414,7 +417,7 @@ def EnsaioValidX():
 	agora = datetime.now()
 	inicio_info = agora.strftime("%d,%m,%Y %H;%M;%S")
 	print("Inicio: " + inicio_info)
-	Centraliza()
+	#Centraliza()
 
 	#Importando sinal de degrau
 	entrada_txt = "Validação/U.txt"
@@ -430,6 +433,10 @@ def EnsaioValidX():
 		k = k+1
 	sinal.close()
 	_, _, raio_inicio = Cam.Rastreamento()
+
+
+	global angulo_X
+	angulo_inicial_X = angulo_X
 
 	
 
@@ -447,26 +454,25 @@ def EnsaioValidX():
 			if m < 25: aux = 1
 			tudo_certo = True
 			cX1 = 0
-			cX2 = 0
 			eX1 = 0
-			eX2 = 0
 			
 			for n in range(N):
 				inicio = time.perf_counter()
 				tecla = cv.waitKey(1) #Utilizado por limitação do compilador
 
-				value[n], _, _ = Cam.Rastreamento()
+				erroX, _, _ = Cam.Rastreamento()
 				
-				eX = aux*u[n] - value[n]
+				eX =  aux*u[n] - erroX
 				
-				cX = round(1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2)
-				cX2 = cX1
+				cX = cX1+eX*0.02845-eX1*0.009505
 				cX1 = cX
-				eX2 = eX1
 				eX1 = eX
 
 				ctrl[n] = cX
-				MoverMotores(cX,0)
+				value[n] = erroX
+				angulo_X = angulo_inicial_X + int(round(cX))
+				AjustaMotores()
+				
 				while time.perf_counter() - inicio < def_amostragem:
 					pass
 				if (time.perf_counter() - inicio) > 0.045 :
@@ -535,6 +541,9 @@ def EnsaioValidY():
 	sinal.close()
 	_, _, raio_inicio = Cam.Rastreamento()
 
+	global angulo_Y
+	angulo_inicial_Y = angulo_Y
+
 	
 
 	#Processo no eixo Y               
@@ -564,14 +573,17 @@ def EnsaioValidY():
 				
 				eY = aux*u[n] - value[n]
 				
-				cY = 1.108*cY1-0.1082*cY2+0.05322*eY-0.04188*eY1+0.01001*eY2
-				cY2 = cY1
+
+				#cY = cY1+eY*0.03238-eY1*0.01432
+				cY = cY1+eY*0.01832-eY1*0.0005831
 				cY1 = cY
-				eY2 = eY1
 				eY1 = eY
+			
+
 
 				ctrl[n] = cY
-				MoverMotores(0,cY)
+				angulo_Y = angulo_inicial_Y + int(round(cY))
+				AjustaMotores()
 				while time.perf_counter() - inicio < def_amostragem:
 					pass
 				if (time.perf_counter() - inicio) > 0.045 :
@@ -613,40 +625,42 @@ def EnsaioValidY():
 
 #Função de aplicação do Controlador
 def Controle():
+	cv.destroyAllWindows()
 	cX1 = 0
-	cX2 = 0
 	eX1 = 0
-	eX2 = 0
 	cY1 = 0
-	cY2 = 0
 	eY1 = 0
-	eY2 = 0
-	
+	global angulo_X
+	global angulo_Y
+	angulo_inicial_X = angulo_X
+	angulo_inicial_Y = angulo_Y
+	print("comeco")
 	while True:
 		inicio = time.perf_counter()
 		
 		eX, eY, r = Cam.Rastreamento()
+		
+		tecla = cv.waitKey(1)
+		
 		eX = eX*(-1)
 		eY = eY*(-1)
+
+
+		if r > 0:
+			cX = cX1+eX*0.03631-eX1*0.0141
+			cY = cY1+eY*0.03445-eY1*0.01274
+			cX1 = cX
+			eX1 = eX
+			cY1 = cY
+			eY1 = eY
+			#Movimentação dos Motores
+			angulo_X = angulo_inicial_X + int(round(cX))
+			angulo_Y = angulo_inicial_Y + int(round(cY))
+			AjustaMotores()
+
+		if tecla == ord('q'): break
 		
-		cX = round(1.117*cX1-0.1168*cX2+0.04809*eX-0.03559*eX1+0.008265*eX2)
-		cX2 = cX1
-		cX1 = cX
-		eX2 = eX1
-		eX1 = eX
-		
-		cY = 1.108*cY1-0.1082*cY2+0.05322*eY-0.04188*eY1+0.01001*eY2
-		cY2 = cY1
-		cY1 = cY
-		eY2 = eY1
-		eY1 = eY
-	
-		#Movimentação dos Motores
-		MoverMotores(0, cY)
-		
-		if cv.waitKey != -1: break
-		
-		while time.perf_counter() - inicio < def_amostragem: pass
+		while(time.perf_counter() - inicio) < def_amostragem: pass
 		
 		if (time.perf_counter() - inicio) > 0.045 : print("Erro! Tempo de amostragem excedido: %s" %(time.perf_counter() - inicio))
 
@@ -661,7 +675,7 @@ Cam = Imagem(def_camera) #inicializa camera
 modo = 0 #Inicializa com o modo de ajuste da máscara
 
 #Inicialização do Arduino
-arduino = serial.Serial('COM'+str(def_com), 9600)
+arduino = .Serial('COM'+str(def_com), 9600)
 print("Inicializando comunicação...")
 time.sleep(2)
 AjustaMotores()
@@ -670,48 +684,31 @@ AjustaMotores()
 
 while True:
 	#Modo de ajuste de máscara
-	while modo == 0:
-		Cam.AjusteMascara()
-		tecla = cv.waitKey(1)
-		if tecla == ord('z'):
-			Cam.PreConfig(1)
-		if tecla == ord('x'):
-			Cam.PreConfig(2)
-		if tecla == ord('c'):
-			Cam.PreConfig(3)
-		if tecla == ord('v'):
-			Cam.PreConfig(4)
-		if tecla == ord('w'):
-			MoverMotores(0, 1)
-		if tecla == ord('s'):
-			MoverMotores(0, -1)
-		if tecla == ord('a'):
-			MoverMotores(1, 0)
-		if tecla == ord('d'):
-			MoverMotores(-1, 0)
-		if tecla != -1:
-			break
-	#Modo com controle aplicado
-	while modo == 1:
-		inicio = time.perf_counter()
-		Controle()
-		tecla = cv.waitKey(1)		
-		if tecla != -1:
-			break
-		while(time.perf_counter()-inicio < def_amostragem):
-			pass
-
+	Cam.AjusteMascara()
+	tecla = cv.waitKey(1)
+	if tecla == ord('z'):
+		Cam.PreConfig(1)
+	if tecla == ord('x'):
+		Cam.PreConfig(2)
+	if tecla == ord('c'):
+		Cam.PreConfig(3)
+	if tecla == ord('v'):
+		Cam.PreConfig(4)
+	if tecla == ord('w'):
+		MoverMotores(0, 1)
+	if tecla == ord('s'):
+		MoverMotores(0, -1)
+	if tecla == ord('a'):
+		MoverMotores(1, 0)
+	if tecla == ord('d'):
+		MoverMotores(-1, 0)
 	#Leitura de Teclas
 	if tecla == 27: #Tecla ESC
 		del Cam
 		break
 	#Seleção de Modos
-	if tecla == ord('q'):
-		cv.destroyAllWindows()
-		modo = 0
 	if tecla == ord('e'):
-		cv.destroyAllWindows()
-		modo = 1
+		Controle()
 	#Modo captura de Dados
 	if tecla == ord('1'):
 		EnsaioIdentX()

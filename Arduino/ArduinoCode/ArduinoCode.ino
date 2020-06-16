@@ -9,8 +9,6 @@ Servo eixo_y;
 int angulo_x = 90;
 int angulo_y = 90;
 
-
-
 void setup() {
   //Coloca o servo do eixo X no pino 9 e do eixo Y no pino 10
   eixo_x.attach(9);
@@ -30,14 +28,14 @@ void loop() {
     if(Serial.read() == 'X')
     {
       angulo_x = Serial.parseInt();
-      eixo_x.write(angulo_x);
+      eixo_x.writeMicroseconds(angulo_x);
      
       while(Serial.available()>0)
       {
         if(Serial.read() == 'Y')
         {
           angulo_y = Serial.parseInt();
-          eixo_y.write(angulo_y);
+          eixo_y.writeMicroseconds(angulo_y);
 
           while(Serial.available()>0)
           {
