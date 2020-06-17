@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 import ObjCamera as Camera
-
+import Plot_grafico as Grafico
 
 # noinspection PyTypeChecker
 class Controle:
@@ -467,3 +467,48 @@ class Controle:
         resposta.close()
 
         print("Processo de coleta finalizado.")
+
+    def regulatorio_grafico(self, periodo):
+
+        Camera.fechar_janelas()
+        self.zerar()
+        print("Iniciando controle regulatorio...")
+        time.sleep(1)
+        angulo_inicial_x, angulo_inicial_y = self.ino.atual()
+        timer = time.perf_counter()
+
+        # Create a plotter class object
+        grafico = Grafico.Plotter(400, 400, 2)
+
+        while True:
+            inicio = time.perf_counter()
+
+            p_x, p_y, r = self.cam.rastreamento()
+
+            self.e_x = p_x * (-1)
+            self.e_y = p_y * (-1)
+            grafico.multiplot([int(p_x/2), int(p_y/2)])
+
+            if r > 0:
+                self.controle_x()
+                self.controle_y()
+
+                # Envia sinal de controle para o atuador
+                angulo_x = angulo_inicial_x + self.c_x
+                angulo_y = angulo_inicial_y + self.c_y
+                self.ino.mover(angulo_x, angulo_y)
+
+            if self.cam.tecla_pressionada() != -1 and self.cam.tecla_pressionada() != ord('1'):
+                break
+
+            if self.cam.tecla_pressionada() == ord('1'):
+                self.zerar()
+
+            while (time.perf_counter() - inicio) < self.def_amostragem:
+                pass
+
+            if (time.perf_counter() - inicio) > 0.045:
+                print("Erro! Tempo de amostragem excedido: %s" % (time.perf_counter() - inicio))
+
+            if (time.perf_counter() - timer) > periodo > 0:
+                break

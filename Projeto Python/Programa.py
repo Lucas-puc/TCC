@@ -25,6 +25,9 @@ while True:
             cor = 1
         cam.pre_config(cor)
 
+    if cam.tecla_pressionada() == ord('3'):
+        controle.regulatorio_grafico(0)
+
     if cam.tecla_pressionada() == ord('7'):
         controle.ensaios_regulatorio()
 
