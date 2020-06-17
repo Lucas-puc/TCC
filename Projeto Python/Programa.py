@@ -18,6 +18,7 @@ while True:
 
     if cam.tecla_pressionada() == ord('1'):
         controle.regulatorio(0)
+        Camera.fechar_janelas()
 
     if cam.tecla_pressionada() == ord('2'):
         cor += 1
@@ -27,15 +28,19 @@ while True:
 
     if cam.tecla_pressionada() == ord('3'):
         controle.regulatorio_grafico(0)
+        Camera.fechar_janelas()
 
     if cam.tecla_pressionada() == ord('7'):
         controle.ensaios_regulatorio()
+        Camera.fechar_janelas()
 
     if cam.tecla_pressionada() == ord('8'):
         controle.ensaios_indent()
+        Camera.fechar_janelas()
 
     if cam.tecla_pressionada() == ord('9'):
         controle.ensaios_controlador()
+        Camera.fechar_janelas()
 
     if cam.tecla_pressionada() in (ord('w'), ord('a'), ord('s'), ord('d')):
         ino.wasd(cam.tecla_pressionada())

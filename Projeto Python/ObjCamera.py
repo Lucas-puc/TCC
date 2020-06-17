@@ -79,6 +79,7 @@ class Imagem:
 
             # Criação da janela de ajuste de máscara
             cv.namedWindow("Ajuste de Mascara")
+            cv.resizeWindow("Ajuste de Mascara", 350, 300)
             cv.createTrackbar("Min-H", "Ajuste de Mascara", 0, 179, nada)
             cv.createTrackbar("Min-S", "Ajuste de Mascara", 0, 255, nada)
             cv.createTrackbar("Min-V", "Ajuste de Mascara", 0, 255, nada)
