@@ -70,6 +70,7 @@ class Controle:
                 # Envia sinal de controle para o atuador
                 angulo_x = angulo_inicial_x + self.c_x
                 angulo_y = angulo_inicial_y + self.c_y
+
                 self.ino.mover(angulo_x, angulo_y)
 
             if self.cam.tecla_pressionada() != -1 and self.cam.tecla_pressionada() != ord('1'):
@@ -496,6 +497,7 @@ class Controle:
                 # Envia sinal de controle para o atuador
                 angulo_x = angulo_inicial_x + self.c_x
                 angulo_y = angulo_inicial_y + self.c_y
+
                 self.ino.mover(angulo_x, angulo_y)
 
             if self.cam.tecla_pressionada() != -1 and self.cam.tecla_pressionada() != ord('1'):
@@ -506,9 +508,6 @@ class Controle:
 
             while (time.perf_counter() - inicio) < self.def_amostragem:
                 pass
-
-            if (time.perf_counter() - inicio) > 0.045:
-                print("Erro! Tempo de amostragem excedido: %s" % (time.perf_counter() - inicio))
 
             if (time.perf_counter() - timer) > periodo > 0:
                 break

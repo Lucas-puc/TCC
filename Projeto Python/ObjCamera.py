@@ -184,6 +184,7 @@ class Imagem:
         # Mostra a imagem capturada da câmera
         cv.imshow("Camera", frame)
         self.tecla = cv.waitKey(1)
+
         # Retorna os valores de erro até o centro e raio
         return int(self.x - largura / 2), int(self.y - altura / 2), self.raio
 

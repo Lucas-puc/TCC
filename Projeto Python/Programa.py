@@ -8,7 +8,8 @@ controle = Controle.Controle(cam, ino, 0.04)
 
 cor = 1
 
-print("Menu:\n1 - Controle Regulatório\n2 - Muda de Cor\n7 - Coleta em Controle Regulatório\n8 - Coleta em Malha Aberta"
+print("Menu:\n1 - Controle Regulatório\n2 - Muda de Cor\n3 - Apresentação\n"
+      "7 - Coleta em Controle Regulatório\n8 - Coleta em Malha Aberta"
       "\n9 - Coleta em Malha Fechada\nw,a,s,d - Mover\nPressione qualquer tecla para sair do regime atual.")
 
 
